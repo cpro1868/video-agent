@@ -157,7 +157,7 @@ network:
   default_proxy: ""
   rules:
     - domains: ["youtube.com", "youtu.be"]
-      proxy: "http://127.0.0.1:8964"
+      proxy: "http://127.0.0.1:7890"
     - domains: ["bilibili.com", "douyin.com"]
       proxy: "direct"
 
