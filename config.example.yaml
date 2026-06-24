@@ -1,0 +1,53 @@
+system:
+  temp_dir: ""
+  auto_cleanup: true
+
+network:
+  default_proxy: ""
+  rules:
+    - domains: ["youtube.com", "youtu.be"]
+      proxy: "socks5://127.0.0.1:7890"
+    - domains: ["bilibili.com", "douyin.com"]
+      proxy: "direct"
+
+ai:
+  asr:
+    device: "auto"
+    model: "iic/SenseVoiceSmall"
+    source_dir: "G:/Projects/Sources/SenseVoice"
+  llm:
+    # Default: Built-in MiniMax CN configuration (for development/testing)
+    # Priority: CLI args > Environment variables > config.yaml > Built-in defaults
+    api_base: "https://api.minimaxi.com/v1"
+    model_name: "MiniMax-M2.7"
+    # WARNING: Do NOT write real API keys here for production!
+    # Use one of these methods instead:
+    #   1. Environment variable: VIDEO_AGENT_LLM_API_KEY=<your-key>
+    #   2. CLI argument: --llm-api-key <your-key>
+    # The built-in key is for development only and will be removed in production builds.
+    api_key: ""
+    timeout_seconds: 60
+    # Optional prompt overrides for final video information extraction.
+    # Default prompt files are bundled in the installed package.
+    # Run `video-agent --init-prompts prompts` to copy editable local files.
+    # You can also pass prompt files via CLI:
+    # --llm-system-prompt-file prompts/default-system.txt
+    # --llm-user-prompt-file prompts/default-video-summary.txt
+    # user_prompt_template supports:
+    # - {output_language}
+    # - {language_instruction}
+    # - {transcript}
+    # Other JSON example braces are preserved as plain text.
+    system_prompt: ""
+    user_prompt_template: ""
+
+# Output format configuration
+# Priority: CLI args (--output-format, --output-file) > config.yaml > defaults
+output:
+  # Default output format: "json" (for Agent parsing) or "markdown" (human-readable)
+  format: "json"
+  # Default output file path. If set, output goes to file instead of stdout.
+  # Leave empty to output to stdout (default).
+  file: ""
+  # Separator used between multiple results in batch Markdown mode
+  batch_separator: "---"

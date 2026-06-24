@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run *)",
+      "Bash(uv build *)",
+      "Bash(python *)",
+      "Bash(systeminfo)",
+      "Bash(findstr /B /C:\"OS Name\" /C:\"OS Version\")",
+      "Bash(wsl --list --verbose)",
+      "Bash(conda run *)",
+      "Bash(findstr -i \"bili\")",
+      "Bash(curl -I --proxy http://127.0.0.1:8964 --connect-timeout 10 https://www.youtube.com)",
+      "Bash(D:\\\\Soft\\\\anaconda3\\\\envs\\\\milvus\\\\python.exe *)",
+      "Bash(export VIDEO_AGENT_LLM_API_KEY=\"sk-cp-Q269R8_2emj2N8caYYJQaH2WYSH3k_aOP8zej4C-Co0GcJ4mni6ghLaABxrfDjn4Ody4yKXEndigh1WJbxl9OAnAH7n52oPCqrialvyzefryjhxRGYOpvTo\")",
+      "Bash(\"D:\\\\Soft\\\\anaconda3\\\\envs\\\\milvus\\\\python.exe\" -m video_agent_skill -u \"https://www.youtube.com/watch?v=KGUXXUCV6S4\" --lang zh --proxy \"http://127.0.0.1:8964\" --llm-api-base \"https://api.minimaxi.com/v1\" --llm-model \"MiniMax-M2.7\" --llm-system-prompt-file \"prompts/default-system.txt\" --llm-user-prompt-file \"prompts/default-video-summary.txt\")",
+      "Bash(\"D:\\\\Soft\\\\anaconda3\\\\envs\\\\milvus\\\\python.exe\" -m video_agent_skill -u \"https://www.bilibili.com/video/BV1DYE46gEAK\" --lang zh --proxy \"http://127.0.0.1:8964\" --llm-api-base \"https://api.minimaxi.com/v1\" --llm-model \"MiniMax-M2.7\" --llm-system-prompt-file \"prompts/default-system.txt\" --llm-user-prompt-file \"prompts/default-video-summary.txt\")",
+      "Bash(\"D:\\\\Soft\\\\anaconda3\\\\envs\\\\milvus\\\\python.exe\" -m video_agent_skill -u \"https://www.youtube.com/watch?v=KGUXXUCV6S4\" --lang zh --proxy \"http://127.0.0.1:8964\" --llm-api-base \"https://api.minimaxi.com/v1\" --llm-model \"MiniMax-M2.7\" --llm-system-prompt-file \"prompts/default-system.txt\" --llm-user-prompt-file \"prompts/default-video-summary.txt\" --keep-temp)",
+      "Bash(curl -I --connect-timeout 10 https://www.bilibili.com/video/BV1DYE46gEAK)",
+      "Bash(curl -I --cookie \"buvid3=test123\" --connect-timeout 10 https://www.bilibili.com/video/BV1DYE46gEAK)",
+      "Bash(curl -L --cookie \"buvid3=test123\" --connect-timeout 10 https://www.bilibili.com/video/BV1DYE46gEAK)",
+      "Bash(D:/Soft/anaconda3/envs/milvus/python *)"
+    ]
+  }
+}

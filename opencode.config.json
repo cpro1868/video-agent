@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "AstroTokenPlan": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "xunfei",
+      "options": {
+        "baseURL": "https://maas-token-api.cn-huabei-1.xf-yun.com/v2",
+        "apiKey": "b1b650dcfac0c19859c9549645f21c22:MTc0ZTI5ZGUwZGE1NTY5ZTllNzQ3M2Ix"
+      },
+      "models": {
+        "astron-code-latest": {
+          "name": "astron-code-latest"
+        }
+      }
+    }
+  }
+}
