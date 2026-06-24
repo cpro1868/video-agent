@@ -157,7 +157,7 @@ network:
   default_proxy: ""
   rules:
     - domains: ["youtube.com", "youtu.be"]
-      proxy: "http://127.0.0.1:8964"
+      proxy: "http://127.0.0.1:7890"
     - domains: ["bilibili.com", "douyin.com"]
       proxy: "direct"
 
@@ -186,7 +186,7 @@ CLI 参数会覆盖 config.yaml 里的对应字段：
 
 ```powershell
 # 用 --proxy 覆盖 config 里的代理设置
-video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --proxy "http://127.0.0.1:8964"
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --proxy "http://127.0.0.1:7890"
 
 # 用 --llm-api-key 覆盖 config 里的 api_key
 video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --llm-api-key "your-key"
