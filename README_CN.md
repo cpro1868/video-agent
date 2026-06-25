@@ -1,5 +1,9 @@
 # Video-Agent-Skill 视频内容总结大师
 
+<p align="center">
+  <a href="README.md">中文</a> | <a href="README_EN.md">English</a> | <a href="README_VI.md">Tiếng Việt</a>
+</p>
+
 <div align="center">
 
 **给 AI Agent 装上"看视频"的眼睛**
