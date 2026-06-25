@@ -1,8 +1,53 @@
-# Video-Agent-Skill 中文说明
+# Video-Agent-Skill 视频内容总结大师
 
-`Video-Agent-Skill` 是一个面向 AI Agent 的无头（Headless）视频内容解析与摘要 CLI。它接收流媒体视频链接，优先提取平台字幕；当字幕不可用时，降级下载低码率音频并调用本地 ASR 转写，最后输出适合 Agent 消费的结构化 JSON 或人类可读的 Markdown。
+<div align="center">
 
-> 当前版本 v1.0.0：字幕优先提取、音频 fallback 下载、SenseVoice/FunASR ASR 封装、OpenAI 兼容 LLM 摘要（支持 Markdown/JSON 双格式）、prompt 文件管理、环境诊断、弹幕分析（B站专属）、结果缓存、进度反馈、批量处理和 Wheel 构建均已就绪。58 个单元测试全部通过，ruff 代码检查通过，wheel 包构建成功。B站 HTTP 412 反爬问题已自行修复。
+**给 AI Agent 装上"看视频"的眼睛**
+
+让大模型 Agent 能直接"看懂"任何视频链接——优先秒级提取字幕，无字幕时本地 ASR 转写，最后输出结构化摘要。
+
+</div>
+
+---
+
+## 这是什么？
+
+你有没有遇到过这样的场景：让 AI 助手帮你总结一个 YouTube 或 B站视频，它只能无奈地回复"我无法访问视频链接"？
+
+**Video-Agent-Skill** 就是来解决这个问题的。它是一个命令行工具（CLI），专门给 AI Agent 当"视频阅读器"——你丢给它一个视频链接，它帮你把视频内容变成结构化的文字摘要，AI Agent 就能像处理普通文本一样处理视频了。
+
+### 为什么需要它？
+
+| 痛点 | Video-Agent-Skill 的解法 |
+|------|--------------------------|
+| **云端 API 按分钟收费，还得上传视频** | 本地处理，零 API 成本（LLM 摘要除外），音频不上传任何第三方服务器 |
+| **浏览器插件无法被 Agent 自动调用** | 纯命令行工具，Agent 直接调用，输出标准 JSON |
+| **下载整个视频太慢太占空间** | 智能降级：先抓字幕（秒级），没字幕才下载低码率音频转写 |
+| **GPU 显存不够跑长视频** | 自动 VAD 切片，30 秒一段，4GB 显存也能跑 1 小时视频 |
+| **多平台网络差异大** | 代理路由，按域名匹配策略，适配 YouTube、B站等平台 |
+
+### 它怎么工作的？
+
+```
+视频 URL ──→ 字幕优先提取（秒级）
+               │
+               ├─ 有字幕 ──→ 下载字幕文本 ──→ LLM 摘要 ──→ JSON/Markdown
+               │
+               └─ 无字幕 ──→ 下载低码率音频 ──→ VAD切片 ──→ 本地ASR转写 ──→ LLM 摘要
+```
+
+1. **字幕优先**：先尝试抓取平台字幕（UP主精校字幕或自动字幕），有就走字幕通道，秒级响应。
+2. **ASR 降级**：没字幕才下载音频，用阿里 SenseVoice 模型本地离线转写，不花钱、不泄隐私。
+3. **LLM 摘要**：转写文本送给 OpenAI 兼容的 LLM（如 MiniMax、Ollama），提炼出标题、摘要、关键要点、详细内容、标签。
+4. **标准输出**：结果以 JSON（给 Agent）或 Markdown（给人看）输出，日志全进 stderr 不干扰。
+
+### 谁在用它？
+
+- **Agent 开发者**：集成到 Dify、FastGPT、Claude Code 等编排框架，让 Agent 能处理视频链接
+- **极客/终端用户**：本地终端直接调用，快速获取长视频摘要
+- **系统维护者**：配置代理路由、部署 Docker、调整 LLM 参数
+
+---
 
 ## 核心能力
 
@@ -18,7 +63,7 @@
 
 ```text
 src/video_agent_skill/cli.py            CLI 入口、全局异常处理、stdout/stderr 隔离
-src/video_agent_skill/core/extractor.py 视频元数据嗅探、字幕提取、音频下载、B站412绕过
+src/video_agent_skill/core/extractor.py 视频元数据嗅探、字幕提取、音频下载
 src/video_agent_skill/core/transcriber.py VAD 切片、本地 ASR 推理、转写清洗
 src/video_agent_skill/core/summarizer.py LLM 摘要生成、Markdown/JSON 双格式解析
 src/video_agent_skill/core/danmaku.py   B站弹幕提取与分析
@@ -294,7 +339,6 @@ video-agent -u "<URL>" --lang zh --output-format markdown --output-file summary.
 - 带字幕视频走 `subtitle` 通道并在 5 秒内返回。
 - 无字幕视频走 `asr` 通道，长音频切片不触发 GPU OOM。
 - B站若仅暴露 `danmaku`，不视为可用 transcript 字幕，按无字幕视频降级到 ASR。
-- B站 HTTP 412 反爬问题已通过动态 buvid3/buvid4 cookie + Origin 请求头修复。
 - 将 stdout 重定向到文件时，文件内容可被 `json.loads` 直接解析。
 - 断网、鉴权失败、LLM 超时等异常均返回标准错误 JSON。
 - 默认运行结束后清理本次 UUID 临时工作目录。
