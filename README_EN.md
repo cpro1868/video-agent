@@ -125,38 +125,139 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | `--init-config [DIR]` | No | Copy config template to directory |
 | `--config` | No | Specify config.yaml path, default reads bundled |
 
-## Installation
+## Installation & Configuration
 
-### Method 1: Run From Source With uv
+### Prerequisites
+
+Ensure the following dependencies are ready before use:
+
+| Dependency | Purpose | Required | Installation |
+|-----------|---------|----------|-------------|
+| **Python 3.10+** | Runtime | Required | System or conda |
+| **FFmpeg** | Audio format conversion (subtitle path doesn't need it, ASR path does) | ASR path | Add to system PATH |
+| **yt-dlp** | Video metadata probing, subtitle/audio download | Required (installed with pip package) | `pip install yt-dlp` or with this package |
+| **PySocks** | SOCKS5 proxy support (needed for YouTube access) | Depends on proxy | `pip install PySocks` or with this package |
+| **FunASR + PyTorch** | Local ASR engine (SenseVoice model) | ASR path | See "ASR Environment Setup" below |
+| **LLM API Key** | LLM summarization | Summary feature | See "LLM Configuration" below |
+
+> **Note**: If the video has subtitles, the subtitle path doesn't need ASR — it returns in seconds. Only videos without subtitles fall back to the ASR path, which requires FunASR + PyTorch.
+
+### ASR Environment Setup (for videos without subtitles)
+
+ASR transcription uses Alibaba's **SenseVoiceSmall** model via the **FunASR** framework, which depends on **PyTorch**. These dependencies are large (with CUDA support), so a dedicated conda environment is recommended:
 
 ```powershell
-uv run video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh
+# 1. Create a dedicated conda environment
+conda create -n milvus python=3.10
+conda activate milvus
+
+# 2. Install PyTorch (choose based on your GPU)
+# With NVIDIA GPU (CUDA):
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+# Without GPU (CPU mode, slower):
+pip install torch torchaudio
+
+# 3. Install FunASR
+pip install funasr
+
+# 4. Install FFmpeg and add to PATH
+# Windows: Download from https://ffmpeg.org/download.html, add bin to PATH
+# Linux:   sudo apt install ffmpeg
+# Mac:     brew install ffmpeg
+
+# 5. Install video-agent-skill
+pip install dist/video_agent_skill-*.whl
+
+# 6. Verify ASR environment
+video-agent --doctor
+# Output should show asr device as cuda or cpu, funasr as installed
 ```
 
-### Method 2: Global Install With pipx
+**SenseVoice Source Directory (optional)**:
+
+By default, FunASR auto-downloads the `iic/SenseVoiceSmall` model from ModelScope. If you have a local SenseVoice source checkout (containing `model.py`), specify it in config.yaml:
+
+```yaml
+ai:
+  asr:
+    source_dir: "G:/Projects/Sources/SenseVoice"  # Directory containing model.py
+```
+
+Or via CLI parameter:
+
+```powershell
+video-agent -u "..." --sensevoice-source-dir "G:/Projects/Sources/SenseVoice"
+```
+
+**ASR Device Selection**:
+
+```yaml
+ai:
+  asr:
+    device: "auto"  # Auto-detect: cuda -> mps -> cpu
+    # device: "cuda"  # Force GPU
+    # device: "cpu"   # Force CPU
+```
+
+- `auto`: Auto-detect, priority `cuda` (NVIDIA GPU) -> `mps` (Apple Silicon) -> `cpu`
+- `cuda`: Force GPU, error if unavailable
+- `cpu`: Force CPU, slower but maximum compatibility
+
+### LLM Configuration (for summary feature)
+
+LLM summarization uses an OpenAI-compatible interface, defaulting to MiniMax. You need an API key:
+
+1. **Get an API key**: Register at [MiniMax Open Platform](https://www.minimaxi.com/)
+2. **Fill in config**: Edit `ai.llm.api_key` in config.yaml
+
+```yaml
+ai:
+  llm:
+    api_base: "https://api.minimaxi.com/v1"  # OpenAI-compatible endpoint
+    model_name: "MiniMax-M2.7"               # Model name
+    api_key: "your-api-key-here"             # Your API key
+    timeout_seconds: 60
+```
+
+Or pass via CLI parameter (overrides config.yaml):
+
+```powershell
+video-agent -u "..." --llm-api-key "your-api-key"
+```
+
+**Using other LLMs** (e.g., local Ollama):
+
+```yaml
+ai:
+  llm:
+    api_base: "http://127.0.0.1:11434/v1"  # Ollama local address
+    model_name: "qwen2.5"                   # Local model name
+    api_key: "ollama"                       # Ollama doesn't need a real key, use any value
+```
+
+### Installation Methods
+
+#### Method 1: pip Install Wheel (Recommended)
+
+```powershell
+pip install dist/video_agent_skill-*.whl
+video-agent --version
+```
+
+#### Method 2: Global Install With pipx
 
 ```powershell
 pipx install .
 video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh
 ```
 
-### Method 3: Wheel Build And pip Install
+#### Method 3: Run From Source With uv (development)
 
 ```powershell
-uv build --wheel
-pip install dist/video_agent_skill-*.whl
-video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh
+uv run video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh
 ```
 
-Wheel release rules (see `AGENTS.md`):
-
-- `pyproject.toml` must define project name, version, dependencies, and the `video-agent` console entry point.
-- Run contract tests before every release to keep `stdout` as pure JSON.
-- `config.yaml` is packaged into the wheel but must be an empty template (`api_key: ""`); never include real credentials.
-- Do not commit `dist/` artifacts to source control unless attached to an official Release.
-- Use semantic versioning: `MAJOR.MINOR.PATCH`.
-
-### Method 4: Docker
+#### Method 4: Docker
 
 ```powershell
 docker build -t video-agent-skill .
@@ -165,19 +266,77 @@ docker run --rm video-agent-skill -u "https://www.youtube.com/watch?v=xxxx" --la
 
 > **Note**: Dockerfile has been written but not yet built or verified in a real environment.
 
+### First-Time Setup Checklist
+
+After installation, verify with these steps:
+
+```powershell
+# 1. Show version
+video-agent --version
+
+# 2. Environment diagnostics (checks yt-dlp, FFmpeg, ASR, LLM config)
+video-agent --doctor
+
+# 3. Generate config and prompts in current directory (for easy editing)
+video-agent --setup
+
+# 4. Edit ./config.yaml — fill in API Key, proxy, ASR paths, etc.
+
+# 5. Test subtitle path (captioned YouTube video, requires proxy)
+video-agent -u "https://www.youtube.com/watch?v=KGUXXUCV6S4" --lang en --proxy "http://127.0.0.1:7890" --transcript-only
+
+# 6. Test full pipeline (LLM summary)
+video-agent -u "https://www.youtube.com/watch?v=KGUXXUCV6S4" --lang zh --proxy "http://127.0.0.1:7890" --output-format markdown --output-file summary.md
+```
+
+### Wheel Release Rules
+
+- `pyproject.toml` must define project name, version, dependencies, and the `video-agent` console entry point.
+- Run contract tests before every release to keep `stdout` as pure JSON.
+- `config.yaml` is packaged into the wheel but must be an empty template (`api_key: ""`); never include real credentials.
+- Do not commit `dist/` artifacts to source control unless attached to an official Release.
+- Use semantic versioning: `MAJOR.MINOR.PATCH`.
+
 ## Configuration
 
 ### Config Loading Rules
 
-**Config is loaded only from the bundled `config.yaml`; CLI parameters override individual fields.**
+Config is loaded by priority (higher overrides lower):
 
-- Config file location: `site-packages/video_agent_skill/config.yaml` (installed with package, removed by pip uninstall)
-- CLI parameters (e.g., `--proxy`, `--llm-api-key`) override corresponding fields in config.yaml
-- No environment variables, no current-directory overrides
+| Priority | Source | Description |
+|----------|--------|-------------|
+| 1 | CLI parameters | `--proxy`, `--llm-api-key`, etc. override fields |
+| 2 | Current directory `./config.yaml` | Project-level override, generate with `--setup` |
+| 3 | Bundled `config.yaml` | Default (in site-packages, removed by pip uninstall) |
+
+Prompt templates follow the same pattern: `./prompts/` in the current directory takes priority over bundled `prompts/`.
+
+### Generate Config in Current Directory
+
+Use `--setup` to generate editable config and prompts in the current working directory:
+
+```powershell
+# Generate config.yaml and prompts/ in current directory
+video-agent --setup
+
+# Overwrite existing files
+video-agent --setup --overwrite
+```
+
+Edit the generated `config.yaml` directly — it doesn't affect the bundled default.
+
+### Config File Location
+
+- **Current directory config**: `./config.yaml` (generated by `--setup`, takes priority)
+- **Bundled default config**: `site-packages/video_agent_skill/config.yaml` (installed with package)
+
+Find the bundled config path:
+
+```powershell
+python -c "import video_agent_skill; from pathlib import Path; print(Path(video_agent_skill.__file__).parent / 'config.yaml')"
+```
 
 ### Config Example
-
-Edit `site-packages/video_agent_skill/config.yaml` after installation:
 
 ```yaml
 system:
@@ -194,16 +353,16 @@ network:
 
 ai:
   asr:
-    device: "auto"
-    model: "iic/SenseVoiceSmall"
-    source_dir: "G:/Projects/Sources/SenseVoice"
+    device: "auto"                          # auto/cuda/mps/cpu
+    model: "iic/SenseVoiceSmall"            # FunASR model name
+    source_dir: "G:/Projects/Sources/SenseVoice"  # Local SenseVoice source dir (optional)
   llm:
-    api_base: "https://api.minimaxi.com/v1"
-    model_name: "MiniMax-M2.7"
-    api_key: ""  # Fill in your API Key here
+    api_base: "https://api.minimaxi.com/v1"  # OpenAI-compatible endpoint
+    model_name: "MiniMax-M2.7"              # Model name
+    api_key: ""                             # Fill in your API Key
     timeout_seconds: 60
-    system_prompt: ""
-    user_prompt_template: ""
+    system_prompt: ""                       # Leave empty to use bundled default
+    user_prompt_template: ""                # Leave empty to use bundled default
 
 output:
   format: "markdown"  # json or markdown
@@ -215,13 +374,16 @@ output:
 
 ```powershell
 # Override proxy
-video-agent -u "..." --lang zh --proxy "http://127.0.0.1:8964"
+video-agent -u "..." --lang zh --proxy "http://127.0.0.1:7890"
 
 # Override API key
 video-agent -u "..." --lang zh --llm-api-key "your-key"
 
 # Override output format
 video-agent -u "..." --lang zh --output-format json
+
+# Override ASR device
+video-agent -u "..." --lang zh --asr-device cuda
 ```
 
 ## Prompt Templates
