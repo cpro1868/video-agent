@@ -1,8 +1,53 @@
-# Video-Agent-Skill
+# Video-Agent-Skill · Video Content Summarizer
 
-`Video-Agent-Skill` is a headless CLI component for AI Agent workflows. It accepts a streaming video URL, extracts existing subtitles first, falls back to local ASR when subtitles are unavailable, and returns structured JSON or human-readable Markdown that an Agent can parse reliably.
+<div align="center">
 
-> Current version v1.0.0: Subtitle-first extraction, audio fallback download, SenseVoice/FunASR ASR wrapping, OpenAI-compatible LLM summarization (Markdown/JSON dual format), prompt file management, environment diagnostics, Bilibili danmaku analysis, result caching, progress reporting, batch processing, and Wheel packaging are all ready. 58 unit tests pass, ruff linting passes, wheel builds successfully. Bilibili HTTP 412 anti-crawler issue has been fixed.
+**Give your AI Agent the ability to "watch" videos**
+
+Let your LLM Agent directly "understand" any video link — extracts subtitles in seconds, falls back to local ASR when needed, and outputs structured summaries.
+
+</div>
+
+---
+
+## What Is This?
+
+Ever asked your AI assistant to summarize a YouTube or Bilibili video, only to get "I can't access video links"?
+
+**Video-Agent-Skill** fixes that. It's a command-line tool that acts as a "video reader" for AI Agents — you feed it a video URL, it turns the content into a structured text summary, and your Agent can process videos just like regular text.
+
+### Why Do You Need It?
+
+| Pain Point | Video-Agent-Skill Solution |
+|-----------|---------------------------|
+| **Cloud APIs charge per minute and require uploading videos** | Local processing, zero API cost (except LLM summary), audio never uploaded to third parties |
+| **Browser extensions can't be called by Agents** | Pure CLI tool, Agent calls directly, outputs standard JSON |
+| **Downloading entire videos is slow and huge** | Smart fallback: grab subtitles first (seconds), only download low-bitrate audio if no subtitles |
+| **Not enough GPU VRAM for long videos** | Automatic VAD slicing, 30-second chunks, run 1-hour videos on 4GB VRAM |
+| **Different platforms need different network access** | Proxy routing, match by domain, works with YouTube, Bilibili, etc. |
+
+### How Does It Work?
+
+```
+Video URL ──→ Subtitle-first extraction (seconds)
+               │
+               ├─ Has subtitles ──→ Download subtitle text ──→ LLM summary ──→ JSON/Markdown
+               │
+               └─ No subtitles  ──→ Download low-bitrate audio ──→ VAD slicing ──→ Local ASR ──→ LLM summary
+```
+
+1. **Subtitle-first**: Try to grab platform subtitles (uploader-edited or auto-generated). If available, use the subtitle path for second-level response.
+2. **ASR fallback**: No subtitles? Download audio and transcribe locally with Alibaba SenseVoice — no cost, no privacy leak.
+3. **LLM summary**: Feed the transcript to an OpenAI-compatible LLM (e.g., MiniMax, Ollama) to extract title, summary, key points, detailed content, and tags.
+4. **Standard output**: Results as JSON (for Agents) or Markdown (for humans). All logs go to stderr, never polluting stdout.
+
+### Who Uses It?
+
+- **Agent developers**: Integrate into Dify, FastGPT, Claude Code, and other orchestration frameworks
+- **Power users**: Run from terminal for quick video summaries
+- **System maintainers**: Configure proxy routing, deploy Docker, tune LLM parameters
+
+---
 
 ## Core Capabilities
 
@@ -18,7 +63,7 @@
 
 ```text
 src/video_agent_skill/cli.py            CLI entry, global error handling, stdout/stderr isolation
-src/video_agent_skill/core/extractor.py Metadata probing, subtitle extraction, audio download, Bilibili 412 bypass
+src/video_agent_skill/core/extractor.py Metadata probing, subtitle extraction, audio download
 src/video_agent_skill/core/transcriber.py VAD slicing, local ASR inference, transcript cleanup
 src/video_agent_skill/core/summarizer.py LLM summary generation, Markdown/JSON dual-format parsing
 src/video_agent_skill/core/danmaku.py   Bilibili danmaku extraction and analysis
@@ -276,7 +321,6 @@ Acceptance checkpoints:
 - Captioned videos use the `subtitle` path and return within 5 seconds.
 - Videos without captions use the `asr` path without GPU OOM on long audio.
 - Bilibili `danmaku` is not treated as transcript subtitles; those videos fall back to ASR.
-- Bilibili HTTP 412 anti-crawler issue has been fixed via dynamic buvid3/buvid4 cookie + Origin header.
 - Redirected stdout can be parsed directly by `json.loads`.
 - Network, authentication, and LLM timeout failures return standard error JSON.
 - Temporary UUID workspaces are removed by default after each run.

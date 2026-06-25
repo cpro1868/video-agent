@@ -16,3 +16,7 @@ config.local.yaml
 *.m4a
 *.vtt
 *.srt
+
+# Local working logs (not for git)
+docs/工作进展记录.md
+docs/里程碑和开发计划.md
