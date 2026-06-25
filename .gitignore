@@ -4,6 +4,7 @@ __pycache__/
 .ruff_cache/
 .venv/
 dist/
+.claude/
 build/
 *.egg-info/
 temp/
@@ -20,3 +21,4 @@ config.local.yaml
 # Local working logs (not for git)
 docs/工作进展记录.md
 docs/里程碑和开发计划.md
+docs/测试记录文档.md
