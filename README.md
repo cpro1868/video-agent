@@ -1,8 +1,9 @@
 # Video-Agent-Skill 视频内容总结大师
 
 <p align="center">
-  <a href="README.md">中文</a> | <a href="README_EN.md">English</a> | <a href="README_VI.md">Tiếng Việt</a>
+  <a href="README.md">简体中文</a> |<a href="README_HAN.md">繁體中文</a> | <a href="README_EN.md">English</a> | <a href="README_VI.md">Tiếng Việt</a>
 </p>
+
 
 <div align="center">
 
