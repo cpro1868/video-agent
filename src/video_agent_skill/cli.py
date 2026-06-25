@@ -246,7 +246,14 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-l", "--lang", default="zh",
-        help="Preferred subtitle language (e.g., zh, en, ja). Default: zh.",
+        help=(
+            "Preferred subtitle language and LLM output language. "
+            "Examples: zh (Simplified Chinese), zh-Hant (Traditional Chinese), "
+            "en (English), ja (Japanese), ko (Korean), vi (Vietnamese), "
+            "fr (French), de (German), es (Spanish), pt (Portuguese), "
+            "ru (Russian), th (Thai), ar (Arabic), it (Italian). "
+            "Default: zh."
+        ),
     )
     parser.add_argument(
         "--proxy", default=None,

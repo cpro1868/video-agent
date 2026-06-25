@@ -48,6 +48,17 @@ class SubtitleCandidate:
 LANGUAGE_ALIASES = {
     "zh": ["zh", "zh-Hans", "zh-Hant", "zh-CN", "zh-TW", "zh-cn", "zh-tw"],
     "en": ["en", "en-US", "en-GB", "en-us", "en-gb"],
+    "ja": ["ja", "ja-JP", "ja-jp"],
+    "ko": ["ko", "ko-KR", "ko-kr"],
+    "vi": ["vi", "vi-VN", "vi-vn"],
+    "fr": ["fr", "fr-FR", "fr-CA", "fr-fr", "fr-ca"],
+    "de": ["de", "de-DE", "de-de"],
+    "es": ["es", "es-ES", "es-MX", "es-es", "es-mx"],
+    "pt": ["pt", "pt-BR", "pt-PT", "pt-br", "pt-pt"],
+    "ru": ["ru", "ru-RU", "ru-ru"],
+    "th": ["th", "th-TH", "th-th"],
+    "ar": ["ar", "ar-SA", "ar-sa"],
+    "it": ["it", "it-IT", "it-it"],
 }
 YDL_NETWORK_OPTIONS = {
     "socket_timeout": 120,

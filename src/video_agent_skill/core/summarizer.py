@@ -52,6 +52,78 @@ PROMPT_TEMPLATE_KEYS = {
 # Backward-compatible alias (Markdown is the default format).
 DEFAULT_SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT_MARKDOWN
 
+# Language code to display name mapping for LLM output
+LANGUAGE_DISPLAY_NAMES: dict[str, str] = {
+    "zh": "Simplified Chinese",
+    "zh-hans": "Simplified Chinese",
+    "zh-hant": "Traditional Chinese",
+    "zh-cn": "Simplified Chinese",
+    "zh-tw": "Traditional Chinese",
+    "en": "English",
+    "en-us": "English",
+    "en-gb": "English",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "vi": "Vietnamese",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "pt": "Portuguese",
+    "ru": "Russian",
+    "th": "Thai",
+    "ar": "Arabic",
+    "it": "Italian",
+}
+
+# Language code to instruction mapping for LLM output
+LANGUAGE_INSTRUCTIONS: dict[str, str] = {
+    "zh": "必须使用简体中文输出。Use Simplified Chinese characters only.",
+    "zh-hans": "必须使用简体中文输出。Use Simplified Chinese characters only.",
+    "zh-hant": "必須使用繁體中文輸出。Use Traditional Chinese characters only.",
+    "zh-cn": "必须使用简体中文输出。Use Simplified Chinese characters only.",
+    "zh-tw": "必須使用繁體中文輸出。Use Traditional Chinese characters only.",
+    "en": "Use English.",
+    "en-us": "Use English.",
+    "en-gb": "Use English (British).",
+    "ja": "日本語で出力してください。Use Japanese.",
+    "ko": "한국어로 출력하세요. Use Korean.",
+    "vi": "Xuất bằng tiếng Việt. Use Vietnamese.",
+    "fr": "Sortez en français. Use French.",
+    "de": "Auf Deutsch ausgeben. Use German.",
+    "es": "Salida en español. Use Spanish.",
+    "pt": "Saída em português. Use Portuguese.",
+    "ru": "Вывод на русском языке. Use Russian.",
+    "th": "เอาต์พุตเป็นภาษาไทย. Use Thai.",
+    "ar": "أخرج بالعربية. Use Arabic.",
+    "it": "Usa l'italiano. Use Italian.",
+}
+
+
+def _resolve_language_name(language: str) -> str:
+    """Resolve a language code to its display name for LLM output."""
+    normalized = language.lower().strip()
+    if normalized in LANGUAGE_DISPLAY_NAMES:
+        return LANGUAGE_DISPLAY_NAMES[normalized]
+    # Try prefix match (e.g., "zh-Hans" matches "zh-hans")
+    for code, name in LANGUAGE_DISPLAY_NAMES.items():
+        if normalized.startswith(code):
+            return name
+    # Fallback: use the raw code as language name
+    return language
+
+
+def _resolve_language_instruction(language: str) -> str:
+    """Resolve a language code to its instruction text for LLM output."""
+    normalized = language.lower().strip()
+    if normalized in LANGUAGE_INSTRUCTIONS:
+        return LANGUAGE_INSTRUCTIONS[normalized]
+    # Try prefix match
+    for code, instruction in LANGUAGE_INSTRUCTIONS.items():
+        if normalized.startswith(code):
+            return instruction
+    # Fallback: generic instruction
+    return f"Use {language}."
+
 
 def summarize_text(
     text: str,
@@ -162,13 +234,8 @@ def _build_chat_payload(
     video_url: str = "",
     video_strategy: str = "",
 ) -> dict[str, Any]:
-    output_language = "Simplified Chinese" if language.lower().startswith("zh") else "English"
-    language_instruction = (
-        "必须使用简体中文输出，禁止使用繁体中文。"
-        "Use Simplified Chinese characters only; do not use Traditional Chinese."
-        if language.lower().startswith("zh")
-        else "Use English."
-    )
+    output_language = _resolve_language_name(language)
+    language_instruction = _resolve_language_instruction(language)
     # Select the default system prompt based on the desired output format.
     # If the user has overridden the system prompt via config/CLI, respect it
     # (they are taking responsibility for format alignment themselves).

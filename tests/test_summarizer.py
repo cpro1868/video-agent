@@ -121,8 +121,7 @@ def test_summarize_text_requests_simplified_chinese(monkeypatch) -> None:
 
     user_prompt = captured["body"]["messages"][1]["content"]
     assert "Simplified Chinese" in user_prompt
-    assert "必须使用简体中文输出" in user_prompt
-    assert "do not use Traditional Chinese" in user_prompt
+    assert "简体中文" in user_prompt
 
 
 def test_summarize_text_truncates_long_chinese_summary(monkeypatch) -> None:

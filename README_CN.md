@@ -102,7 +102,7 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | 参数 | 必填 | 说明 |
 |------|------|------|
 | `-u, --url` | 是 | 目标视频 URL |
-| `-l, --lang` | 否 | 优先字幕语言，默认 `zh` |
+| `-l, --lang` | 否 | 字幕嗅探和 LLM 输出语言，默认 `zh`。支持 `zh`/`zh-Hant`/`en`/`ja`/`ko`/`vi`/`fr`/`de`/`es`/`pt`/`ru`/`th`/`ar`/`it`，详见下方语言列表 |
 | `--proxy` | 否 | 单次运行强制代理 |
 | `--keep-temp` | 否 | 保留临时文件用于调试 |
 | `--transcript-only` | 否 | 仅返回转写文本，不调用 LLM |
@@ -128,6 +128,40 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | `--init-prompts [DIR]` | 否 | 复制默认 Prompt 到本地目录 |
 | `--init-config [DIR]` | 否 | 复制配置模板到指定目录 |
 | `--config` | 否 | 指定 config.yaml 路径，默认读包内 |
+
+### 支持的语言
+
+`--lang` 参数同时控制字幕嗅探语言和 LLM 摘要输出语言：
+
+| 语言代码 | 输出语言 | 说明 |
+|----------|----------|------|
+| `zh` | 简体中文 | 默认值 |
+| `zh-Hant` 或 `zh-TW` | 繁体中文 | |
+| `en` | English | |
+| `ja` | 日本語 | |
+| `ko` | 한국어 | |
+| `vi` | Tiếng Việt | |
+| `fr` | Français | |
+| `de` | Deutsch | |
+| `es` | Español | |
+| `pt` | Português | |
+| `ru` | Русский | |
+| `th` | ภาษาไทย | |
+| `ar` | العربية | |
+| `it` | Italiano | |
+
+```powershell
+# 输出繁体中文摘要
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh-Hant
+
+# 输出日语摘要
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang ja
+
+# 输出越南语摘要
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang vi
+```
+
+> 未列出的语言代码会作为 fallback 传给 LLM，效果取决于 LLM 对该语言的支持程度。
 
 Windows 环境下如遵循本仓库 Agent 约定，请通过 `rtk` 执行命令：
 

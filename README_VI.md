@@ -102,7 +102,7 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | Tham số | Bắt buộc | Mô tả |
 |---------|----------|-------|
 | `-u, --url` | Có | URL video mục tiêu |
-| `-l, --lang` | Không | Ngôn ngữ phụ đề ưu tiên, mặc định `zh` |
+| `-l, --lang` | Không | Ngôn ngữ phụ đề và xuất tóm tắt LLM, mặc định `zh`. Hỗ trợ `zh`/`zh-Hant`/`en`/`ja`/`ko`/`vi`/`fr`/`de`/`es`/`pt`/`ru`/`th`/`ar`/`it`, xem danh sách bên dưới |
 | `--proxy` | Không | Proxy bắt buộc cho lần chạy này |
 | `--keep-temp` | Không | Giữ file tạm để gỡ lỗi |
 | `--transcript-only` | Không | Chỉ trả về bản chuyển văn bản, bỏ qua LLM |
@@ -128,6 +128,40 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | `--init-prompts [DIR]` | Không | Sao chép prompt mặc định ra thư mục địa phương |
 | `--init-config [DIR]` | Không | Sao chép mẫu cấu hình ra thư mục chỉ định |
 | `--config` | Không | Chỉ định đường dẫn config.yaml, mặc định đọc trong gói |
+
+### Ngôn ngữ được hỗ trợ
+
+Tham số `--lang` đồng thời điều khiển ngôn ngữ phụ đề và ngôn ngữ xuất tóm tắt LLM:
+
+| Mã | Ngôn ngữ xuất | Ghi chú |
+|----|---------------|---------|
+| `zh` | Tiếng Trung giản thể | Mặc định |
+| `zh-Hant` hoặc `zh-TW` | Tiếng Trung phồn thể | |
+| `en` | Tiếng Anh | |
+| `ja` | Tiếng Nhật | |
+| `ko` | Tiếng Hàn | |
+| `vi` | Tiếng Việt | |
+| `fr` | Tiếng Pháp | |
+| `de` | Tiếng Đức | |
+| `es` | Tiếng Tây Ban Nha | |
+| `pt` | Tiếng Bồ Đào Nha | |
+| `ru` | Tiếng Nga | |
+| `th` | Tiếng Thái | |
+| `ar` | Tiếng Ả Rập | |
+| `it` | Tiếng Ý | |
+
+```powershell
+# Xuất tóm tắt tiếng Trung phồn thể
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh-Hant
+
+# Xuất tóm tắt tiếng Nhật
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang ja
+
+# Xuất tóm tắt tiếng Việt
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang vi
+```
+
+> Mã ngôn ngữ không có trong danh sách sẽ được truyền cho LLM sebagai fallback; kết quả phụ thuộc vào mức độ hỗ trợ của LLM cho ngôn ngữ đó.
 
 ## Cài đặt & Cấu hình
 
