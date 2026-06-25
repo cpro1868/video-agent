@@ -102,7 +102,7 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `-u, --url` | Yes | Target video URL |
-| `-l, --lang` | No | Preferred subtitle language, default `zh` |
+| `-l, --lang` | No | Subtitle sniffing and LLM output language, default `zh`. Supports `zh`/`zh-Hant`/`en`/`ja`/`ko`/`vi`/`fr`/`de`/`es`/`pt`/`ru`/`th`/`ar`/`it`, see language list below |
 | `--proxy` | No | Force proxy for this run |
 | `--keep-temp` | No | Keep temporary files for debugging |
 | `--transcript-only` | No | Return transcript only, skip LLM |
@@ -128,6 +128,40 @@ video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh --output-format 
 | `--init-prompts [DIR]` | No | Copy default prompts to local directory |
 | `--init-config [DIR]` | No | Copy config template to directory |
 | `--config` | No | Specify config.yaml path, default reads bundled |
+
+### Supported Languages
+
+The `--lang` parameter controls both subtitle sniffing language and LLM summary output language:
+
+| Code | Output Language | Notes |
+|------|-----------------|-------|
+| `zh` | Simplified Chinese | Default |
+| `zh-Hant` or `zh-TW` | Traditional Chinese | |
+| `en` | English | |
+| `ja` | Japanese | |
+| `ko` | Korean | |
+| `vi` | Vietnamese | |
+| `fr` | French | |
+| `de` | German | |
+| `es` | Spanish | |
+| `pt` | Portuguese | |
+| `ru` | Russian | |
+| `th` | Thai | |
+| `ar` | Arabic | |
+| `it` | Italian | |
+
+```powershell
+# Output Traditional Chinese summary
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang zh-Hant
+
+# Output Japanese summary
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang ja
+
+# Output Vietnamese summary
+video-agent -u "https://www.youtube.com/watch?v=xxxx" --lang vi
+```
+
+> Language codes not listed above are passed to the LLM as fallback; results depend on the LLM's support for that language.
 
 ## Installation & Configuration
 
