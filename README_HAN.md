@@ -8,7 +8,7 @@
 <div align="center">
 **給 AI Agent 裝上"看影片"的眼睛**
 
-讓大模型 Agent 能直接"看懂"任何視訊連結－優先秒級擷取字幕，無字幕時本地 ASR 轉寫，最後輸出結構化摘要。
+讓大模型 Agent 能直接"看懂"任何影片連結－優先秒級擷取字幕，無字幕時本地 ASR 轉寫，最後輸出結構化摘要。
 
 </div>
 
@@ -16,9 +16,9 @@
 
 ## 這是什麼？
 
-你有沒有遇到過這樣的場景：讓 AI 助手幫你總結一個 YouTube 或 B站視頻，它只能無奈地回复"我無法訪問視頻鏈接"？
+你有沒有遇到過這樣的場景：讓 AI 助手幫你總結一個 YouTube 或 B站影片，它只能無奈地回复"我無法訪問影片鏈接"？
 
-**Video-Agent-Skill** 就是來解決這個問題的。它是一個命令行工具（CLI），專門給 AI Agent 當"視頻閱讀器"——你丟給它一個視頻鏈接，它幫你把視頻內容變成結構化的文字摘要，AI Agent 就能像處理普通文本一樣處理視頻了。
+**Video-Agent-Skill** 就是來解決這個問題的。它是一個命令行工具（CLI），專門給 AI Agent 當"影片閱讀器"——你丟給它一個影片鏈接，它幫你把影片內容變成結構化的文字摘要，AI Agent 就能像處理普通文本一樣處理影片了。
 
 ### 為什麼需要它？
 
@@ -48,7 +48,7 @@
 ### 誰在用它？
 
 - **Agent 開發者**：整合到 Dify、FastGPT、Claude Code 等編排框架，讓 Agent 處理視訊鏈接
-- **極客/終端用戶**：本地終端直接調用，快速獲取長視頻摘要
+- **極客/終端用戶**：本地終端直接調用，快速獲取長影片摘要
 - **系統維護者**：設定代理路由、部署 Docker、調整 LLM 參數
 
 ---
@@ -326,7 +326,7 @@ video-agent --setup
 
 # 4. 編輯目前目錄的 config.yaml，填入 API Key、代理、ASR 路徑等
 
-# 5. 測試字幕頻道（有字幕的 YouTube 視頻，需要代理）
+# 5. 測試字幕頻道（有字幕的 YouTube 影片，需要代理）
 video-agent -u "https://www.youtube.com/watch?v=KGUXXUCV6S4" --lang en --proxy "http://127.0.0.1:7890" --transcript-only
 
 # 6. 測試完整流程（LLM 摘要）
@@ -528,9 +528,9 @@ video-agent -u "<URL>" --lang zh --output-format markdown --output-file summary.
 
 關鍵驗收點：
 
-- 帶字幕視頻走 `subtitle` 通道並在 5 秒內返回。
+- 帶字幕影片走 `subtitle` 通道並在 5 秒內返回。
 - 無字幕影片走 `asr` 頻道，長音訊切片不觸發 GPU OOM。
-- B站若僅暴露 `danmaku`，不視為可用 transcript 字幕，按無字幕視頻降級到 ASR。
+- B站若僅暴露 `danmaku`，不視為可用 transcript 字幕，按無字幕影片降級到 ASR。
 - 將 stdout 重新導向至檔案時，檔案內容可被 `json.loads` 直接解析。
 - 斷網、鑑權失敗、LLM 逾時等異常均傳回標準錯誤 JSON。
 - 預設執行結束後清理本次 UUID 暫存工作目錄。
