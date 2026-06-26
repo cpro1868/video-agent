@@ -60,6 +60,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         for name in handlers:
             sys.stderr.write(f"  - {name}\n")
 
+        sys.stderr.write("ASR engines:\n")
+        for name in registry.list_asr_engines():
+            sys.stderr.write(f"  - {name}\n")
+
         return 0
 
     url = _extract_url_for_error(args_list)
