@@ -409,7 +409,6 @@ def _render_agent_output(
         content = data.get("content", {})
         markdown = content.get("markdown", "") if isinstance(content, dict) else ""
         if not markdown:
-            # Fallback: generate markdown from structured fields
             markdown = _generate_markdown(data)
         output = markdown
     else:
@@ -552,6 +551,8 @@ def _run_single(
             _work_dir=runtime.work_dir,
             _asr=asr,
             _use_cache=use_cache,
+            _timeout_seconds=config.network.timeout_seconds,
+            _max_retries=config.network.max_retries,
         )
         tracker.complete(
             f"strategy={extraction.strategy_used}, "

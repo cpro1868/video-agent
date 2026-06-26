@@ -121,7 +121,7 @@ def test_extract_text_from_url_uses_subtitle_path(monkeypatch) -> None:
     monkeypatch.setattr(
         extractor,
         "_probe_video_info",
-        lambda url, proxy="": {
+        lambda url, proxy="", timeout_seconds=60, max_retries=3: {
             "duration": 42,
             "subtitles": {"en": [{"url": "https://example.com/caption.vtt", "ext": "vtt"}]},
         },
@@ -147,12 +147,12 @@ def test_extract_text_from_url_uses_asr_fallback(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(
         extractor,
         "_probe_video_info",
-        lambda url, proxy="": {"duration": 42, "subtitles": {}, "automatic_captions": {}},
+        lambda url, proxy="", timeout_seconds=60, max_retries=3: {"duration": 42, "subtitles": {}, "automatic_captions": {}},
     )
     monkeypatch.setattr(
         extractor,
         "_download_audio_as_wav",
-        lambda url, work_dir, proxy="": work_dir / "audio.wav",
+        lambda url, work_dir, proxy="", timeout_seconds=60, max_retries=3: work_dir / "audio.wav",
     )
 
     def fake_transcribe_audio(

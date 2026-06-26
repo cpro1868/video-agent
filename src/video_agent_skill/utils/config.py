@@ -31,6 +31,8 @@ class ProxyRule:
 @dataclass(frozen=True)
 class NetworkConfig:
     default_proxy: str = ""
+    timeout_seconds: int = 60
+    max_retries: int = 3
     rules: list[ProxyRule] = field(default_factory=list)
 
 
@@ -142,6 +144,8 @@ def parse_config(raw: dict[str, object]) -> AppConfig:
         ),
         network=NetworkConfig(
             default_proxy=str(network_raw.get("default_proxy") or ""),
+            timeout_seconds=_as_int(network_raw.get("timeout_seconds"), default=60),
+            max_retries=_as_int(network_raw.get("max_retries"), default=3),
             rules=rules,
         ),
         ai=AiConfig(

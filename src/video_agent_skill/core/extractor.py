@@ -69,18 +69,22 @@ YDL_NETWORK_OPTIONS = {
 }
 
 
-def _get_ydl_options() -> dict[str, Any]:
-    """Get yt-dlp network options with reasonable connection timeout.
+def _get_ydl_options(timeout_seconds: int = 60, max_retries: int = 3) -> dict[str, Any]:
+    """Get yt-dlp network options with configurable connection timeout.
 
     socket_timeout controls connection timeout only.
     Download progress is handled by yt-dlp's internal progress tracking.
+
+    Args:
+        timeout_seconds: Connection timeout in seconds (default 60).
+        max_retries: Maximum number of retries for failed downloads (default 3).
     """
     return {
-        "socket_timeout": 60,  # Connection timeout only
-        "retries": 3,
-        "fragment_retries": 5,
-        "extractor_retries": 3,
-        "file_access_retries": 3,
+        "socket_timeout": timeout_seconds,
+        "retries": max_retries,
+        "fragment_retries": max_retries + 2,
+        "extractor_retries": max_retries,
+        "file_access_retries": max_retries,
     }
 
 
@@ -92,6 +96,8 @@ def extract_text_from_url(
     _work_dir: str | Path | None = None,
     _asr: AsrConfig | None = None,
     _use_cache: bool = True,
+    _timeout_seconds: int = 60,
+    _max_retries: int = 3,
 ) -> ExtractionResult:
     _validate_url(url)
 
@@ -106,12 +112,12 @@ def extract_text_from_url(
                 duration_seconds=cached.get("duration_seconds"),
             )
 
-    video_info = _probe_video_info(url, proxy=_proxy)
+    video_info = _probe_video_info(url, proxy=_proxy, timeout_seconds=_timeout_seconds, max_retries=_max_retries)
     candidate = choose_subtitle(video_info, _language)
     if candidate is None:
         work_dir = Path(_work_dir) if _work_dir is not None else Path.cwd()
         asr_config = _asr or AsrConfig()
-        audio_path = _download_audio_as_wav(url, work_dir=work_dir, proxy=_proxy)
+        audio_path = _download_audio_as_wav(url, work_dir=work_dir, proxy=_proxy, timeout_seconds=_timeout_seconds, max_retries=_max_retries)
         text = transcribe_audio(
             str(audio_path),
             configured_device=asr_config.device,
@@ -302,7 +308,7 @@ def fetch_subtitle_text(url: str, *, proxy: str = "") -> str:
         raise NetworkError(f"Subtitle download failed: {exc.reason}.") from exc
 
 
-def _probe_video_info(url: str, *, proxy: str = "") -> dict[str, Any]:
+def _probe_video_info(url: str, *, proxy: str = "", timeout_seconds: int = 60, max_retries: int = 3) -> dict[str, Any]:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as exc:
@@ -315,7 +321,7 @@ def _probe_video_info(url: str, *, proxy: str = "") -> dict[str, Any]:
         "writesubtitles": True,
         "writeautomaticsub": True,
         "http_headers": _default_http_headers(url),
-        **_get_ydl_options(),
+        **_get_ydl_options(timeout_seconds=timeout_seconds, max_retries=max_retries),
     }
     if proxy and proxy != "direct":
         ydl_opts["proxy"] = proxy
@@ -340,7 +346,7 @@ def _probe_video_info(url: str, *, proxy: str = "") -> dict[str, Any]:
     return info
 
 
-def _download_audio_as_wav(url: str, *, work_dir: Path, proxy: str = "") -> Path:
+def _download_audio_as_wav(url: str, *, work_dir: Path, proxy: str = "", timeout_seconds: int = 60, max_retries: int = 3) -> Path:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as exc:
@@ -354,7 +360,7 @@ def _download_audio_as_wav(url: str, *, work_dir: Path, proxy: str = "") -> Path
         "quiet": True,
         "no_warnings": True,
         "http_headers": _default_http_headers(url),
-        **_get_ydl_options(),
+        **_get_ydl_options(timeout_seconds=timeout_seconds, max_retries=max_retries),
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
