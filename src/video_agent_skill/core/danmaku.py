@@ -13,11 +13,32 @@ import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.request import Request, urlopen
 
 from video_agent_skill.errors import NetworkError
 from video_agent_skill.utils.config import LlmConfig
+
+if TYPE_CHECKING:
+    from video_agent_skill.core.plugin_registry import PluginRegistry
+
+
+@runtime_checkable
+class DanmakuProvider(Protocol):
+    """Protocol for danmaku extraction plugins."""
+
+    @property
+    def name(self) -> str:
+        """Plugin unique identifier."""
+        ...
+
+    def supports(self, url: str) -> bool:
+        """Check if this provider can handle the URL."""
+        ...
+
+    def extract(self, url: str, *, proxy: str = "") -> list[DanmakuItem]:
+        """Extract danmaku from video URL."""
+        ...
 
 
 @dataclass(frozen=True)
@@ -53,79 +74,91 @@ class DanmakuAnalysis:
     markdown: str = ""
 
 
-def extract_danmaku(video_url: str, *, proxy: str = "") -> list[DanmakuItem]:
-    """Extract danmaku from Bilibili video using yt-dlp.
+class BilibiliDanmakuProvider:
+    """Danmaku provider for Bilibili videos using yt-dlp."""
 
-    Returns empty list if no danmaku available or not a Bilibili URL.
+    name: str = "bilibili"
+
+    def supports(self, url: str) -> bool:
+        """Check if this provider can handle the URL."""
+        return "bilibili.com" in url
+
+    def extract(self, url: str, *, proxy: str = "") -> list[DanmakuItem]:
+        """Extract danmaku from Bilibili video using yt-dlp."""
+        try:
+            import sys
+            from pathlib import Path
+
+            _PROJECT_ROOT = Path(__file__).resolve().parents[3]
+            _YTDLP_FIX = _PROJECT_ROOT / "yt-dlp-fix"
+            if str(_YTDLP_FIX) not in sys.path and _YTDLP_FIX.exists():
+                sys.path.insert(0, str(_YTDLP_FIX))
+
+            from yt_dlp import YoutubeDL
+        except ImportError as exc:
+            raise NetworkError("yt-dlp is not installed.") from exc
+
+        from video_agent_skill.core.extractor import _get_bilibili_cookie_file
+
+        ydl_opts: dict[str, Any] = {
+            "skip_download": True,
+            "quiet": True,
+            "no_warnings": True,
+            "writesubtitles": True,
+            "subtitleslangs": ["danmaku"],
+            "subtitlesformat": "xml",
+            "cookiefile": _get_bilibili_cookie_file(),
+            "http_headers": {
+                "Origin": "https://www.bilibili.com",
+                "Referer": "https://www.bilibili.com/",
+            },
+            "socket_timeout": 30,
+            "retries": 3,
+        }
+        if proxy and proxy != "direct":
+            ydl_opts["proxy"] = proxy
+
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+        except Exception:
+            return []
+
+        if not isinstance(info, dict):
+            return []
+
+        subtitles = info.get("subtitles", {})
+        if not isinstance(subtitles, dict):
+            return []
+
+        danmaku_entries = subtitles.get("danmaku")
+        if not danmaku_entries or not isinstance(danmaku_entries, list):
+            return []
+
+        danmaku_url = danmaku_entries[0].get("url")
+        if not danmaku_url:
+            return []
+
+        try:
+            danmaku_xml = _download_text(danmaku_url, proxy=proxy)
+        except Exception:
+            return []
+
+        return _parse_danmaku_xml(danmaku_xml)
+
+
+def extract_danmaku(url: str, *, proxy: str = "") -> list[DanmakuItem]:
+    """Extract danmaku using plugin system.
+
+    Falls back to BilibiliDanmakuProvider if no plugin supports the URL.
     """
-    if "bilibili.com" not in video_url:
-        return []
+    registry: PluginRegistry = PluginRegistry.instance()
+    provider = registry.get_danmaku_provider(url)
 
-    try:
-        import sys
-        from pathlib import Path
+    if provider is None:
+        provider = BilibiliDanmakuProvider()
 
-        # Prefer local yt-dlp-fix for Bilibili patches
-        _PROJECT_ROOT = Path(__file__).resolve().parents[3]
-        _YTDLP_FIX = _PROJECT_ROOT / "yt-dlp-fix"
-        if str(_YTDLP_FIX) not in sys.path and _YTDLP_FIX.exists():
-            sys.path.insert(0, str(_YTDLP_FIX))
-
-        from yt_dlp import YoutubeDL
-    except ImportError as exc:
-        raise NetworkError("yt-dlp is not installed.") from exc
-
-    # Import cookie helper from extractor module
-    from video_agent_skill.core.extractor import _get_bilibili_cookie_file
-
-    ydl_opts: dict[str, Any] = {
-        "skip_download": True,
-        "quiet": True,
-        "no_warnings": True,
-        "writesubtitles": True,
-        "subtitleslangs": ["danmaku"],
-        "subtitlesformat": "xml",
-        "cookiefile": _get_bilibili_cookie_file(),
-        "http_headers": {
-            "Origin": "https://www.bilibili.com",
-            "Referer": "https://www.bilibili.com/",
-        },
-        "socket_timeout": 30,
-        "retries": 3,
-    }
-    if proxy and proxy != "direct":
-        ydl_opts["proxy"] = proxy
-
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-    except Exception:
-        # Danmaku extraction is optional, return empty on failure
-        return []
-
-    if not isinstance(info, dict):
-        return []
-
-    # Get danmaku subtitle URL
-    subtitles = info.get("subtitles", {})
-    if not isinstance(subtitles, dict):
-        return []
-
-    danmaku_entries = subtitles.get("danmaku")
-    if not danmaku_entries or not isinstance(danmaku_entries, list):
-        return []
-
-    # Download danmaku XML
-    danmaku_url = danmaku_entries[0].get("url")
-    if not danmaku_url:
-        return []
-
-    try:
-        danmaku_xml = _download_text(danmaku_url, proxy=proxy)
-    except Exception:
-        return []
-
-    return _parse_danmaku_xml(danmaku_xml)
+    return provider.extract(url, proxy=proxy)
 
 
 def _download_text(url: str, *, proxy: str = "") -> str:
