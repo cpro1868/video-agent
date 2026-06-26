@@ -27,4 +27,4 @@ __all__ = [
     "PluginRegistry",
 ]
 
-__version__ = "2.0.0a0"
+__version__ = "2.0.0b0"
