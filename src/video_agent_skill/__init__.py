@@ -12,6 +12,19 @@ and prompts/ in the current working directory.
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+from video_agent_skill.core.danmaku import (
+    DanmakuItem,
+    DanmakuProvider,
+    BilibiliDanmakuProvider,
+)
+from video_agent_skill.core.plugin_registry import PluginRegistry
+
+__all__ = [
+    "__version__",
+    "DanmakuItem",
+    "DanmakuProvider",
+    "BilibiliDanmakuProvider",
+    "PluginRegistry",
+]
 
 __version__ = "1.5.0"
