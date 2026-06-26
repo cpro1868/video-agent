@@ -1,0 +1,11 @@
+[project]
+name = "video-agent-skill-plugin-example"
+version = "0.1.0"
+description = "Example danmaku plugin for video-agent-skill"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = ["video-agent-skill>=2.0a0"]
+
+[project.entry-points."video_agent_skill.danmaku"]
+example = "video_agent_skill_plugin_example:ExampleDanmakuProvider"
