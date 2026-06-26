@@ -308,6 +308,27 @@ def fetch_subtitle_text(url: str, *, proxy: str = "") -> str:
         raise NetworkError(f"Subtitle download failed: {exc.reason}.") from exc
 
 
+def _apply_anticrawler_handlers(url: str, ydl_opts: dict[str, Any]) -> dict[str, Any]:
+    """Apply all matching anti-crawler handlers to yt-dlp options.
+    
+    Loads built-in BilibiliAntiCrawlerHandler and any third-party handlers.
+    """
+    from video_agent_skill.core.anticrawler import BilibiliAntiCrawlerHandler
+    from video_agent_skill.core.plugin_registry import PluginRegistry
+    
+    registry = PluginRegistry.instance()
+    handlers = registry.get_anticrawler_handlers(url)
+    
+    builtin_handler = BilibiliAntiCrawlerHandler()
+    if builtin_handler.supports(url):
+        handlers.append(builtin_handler)
+    
+    for handler in handlers:
+        ydl_opts = handler.apply(ydl_opts)
+    
+    return ydl_opts
+
+
 def _probe_video_info(url: str, *, proxy: str = "", timeout_seconds: int = 60, max_retries: int = 3) -> dict[str, Any]:
     try:
         from yt_dlp import YoutubeDL
@@ -326,9 +347,7 @@ def _probe_video_info(url: str, *, proxy: str = "", timeout_seconds: int = 60, m
     if proxy and proxy != "direct":
         ydl_opts["proxy"] = proxy
 
-    # Bilibili needs cookie handling for 412
-    if "bilibili.com" in urlparse(url).netloc:
-        ydl_opts["cookiefile"] = _get_bilibili_cookie_file()
+    ydl_opts = _apply_anticrawler_handlers(url, ydl_opts)
 
     try:
         with YoutubeDL(ydl_opts) as ydl:
@@ -372,9 +391,7 @@ def _download_audio_as_wav(url: str, *, work_dir: Path, proxy: str = "", timeout
     if proxy and proxy != "direct":
         ydl_opts["proxy"] = proxy
 
-    # Bilibili needs cookie handling for 412
-    if "bilibili.com" in urlparse(url).netloc:
-        ydl_opts["cookiefile"] = _get_bilibili_cookie_file()
+    ydl_opts = _apply_anticrawler_handlers(url, ydl_opts)
 
     try:
         with YoutubeDL(ydl_opts) as ydl:

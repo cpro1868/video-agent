@@ -23,3 +23,19 @@ def test_list_danmaku_providers_returns_empty_when_no_plugins():
     registry._danmaku_providers = []
     result = registry.list_danmaku_providers()
     assert result == []
+
+
+def test_list_anticrawler_handlers_returns_empty_when_no_plugins():
+    """When no anticrawler handlers loaded, return empty list."""
+    registry = PluginRegistry()
+    registry._anticrawler_handlers = []
+    result = registry.list_anticrawler_handlers()
+    assert result == []
+
+
+def test_get_anticrawler_handlers_returns_empty_when_no_plugins():
+    """When no handlers loaded, return empty list."""
+    registry = PluginRegistry()
+    registry._anticrawler_handlers = []
+    result = registry.get_anticrawler_handlers("https://bilibili.com/video/BV123")
+    assert result == []
