@@ -19,7 +19,7 @@ from video_agent_skill.errors import (
     SubtitleParseError,
     UnsupportedUrlError,
 )
-from video_agent_skill.utils.cache import get_cached, set_cached
+from video_agent_skill.utils.cache import get_cached_file, set_cached_file
 from video_agent_skill.utils.config import AsrConfig
 from video_agent_skill.utils.logging import info
 
@@ -103,7 +103,7 @@ def extract_text_from_url(
 
     # Check cache first
     if _use_cache:
-        cached = get_cached(url)
+        cached = get_cached_file(url)
         if cached is not None:
             info(f"Using cached result for {url}")
             return ExtractionResult(
@@ -145,7 +145,7 @@ def extract_text_from_url(
 
     # Cache the result (text only, never audio)
     if _use_cache:
-        set_cached(url, {
+        set_cached_file(url, {
             "strategy_used": result.strategy_used,
             "text": result.text,
             "duration_seconds": result.duration_seconds,

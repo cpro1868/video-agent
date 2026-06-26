@@ -3,6 +3,10 @@
 Caches extracted transcripts (subtitles or ASR results) keyed by URL,
 avoiding redundant downloads and processing. Only text is cached,
 never audio or video files.
+
+Provides two cache layers:
+1. In-memory cache (get_cached/set_cached) with explicit TTL
+2. File-based cache (get_cached_url/set_cached_url) with configurable TTL via env
 """
 
 from __future__ import annotations
@@ -18,6 +22,8 @@ from video_agent_skill.utils.logging import debug, info, warning
 
 DEFAULT_CACHE_DIR = Path.home() / ".video_agent_skill" / "cache"
 DEFAULT_CACHE_TTL_SECONDS = 7 * 24 * 3600  # 7 days
+
+_memory_cache: dict[str, dict[str, Any]] = {}
 
 
 def _url_to_key(url: str) -> str:
@@ -42,7 +48,22 @@ def _get_cache_ttl() -> int:
         return DEFAULT_CACHE_TTL_SECONDS
 
 
-def get_cached(url: str) -> dict[str, Any] | None:
+def set_cached(key: str, value: Any, ttl: int = 3600) -> None:
+    """Set cached value with TTL in seconds."""
+    _memory_cache[key] = {"value": value, "expires": time.time() + ttl}
+
+
+def get_cached(key: str) -> Any | None:
+    """Get cached value if not expired."""
+    if key in _memory_cache:
+        entry = _memory_cache[key]
+        if time.time() < entry["expires"]:
+            return entry["value"]
+        del _memory_cache[key]
+    return None
+
+
+def get_cached_file(url: str) -> dict[str, Any] | None:
     """Retrieve cached extraction result for URL if valid.
 
     Returns None if not cached or expired.
@@ -70,7 +91,7 @@ def get_cached(url: str) -> dict[str, Any] | None:
         return None
 
 
-def set_cached(url: str, result: dict[str, Any]) -> None:
+def set_cached_file(url: str, result: dict[str, Any]) -> None:
     """Store extraction result in cache."""
     cache_dir = _get_cache_dir()
     cache_dir.mkdir(parents=True, exist_ok=True)
