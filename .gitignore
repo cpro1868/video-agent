@@ -26,3 +26,4 @@ docs/测试记录文档.md
 # Git hooks (use .githooks/ for versioned hooks, see AGENTS.md)
 # Uncomment the following line if using local hooks:
 # .git/hooks/
+AGENTS.md
