@@ -49,10 +49,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args_list and args_list[0] == "--list-plugins":
         from video_agent_skill.core.plugin_registry import PluginRegistry
         registry = PluginRegistry.instance()
+
         providers = registry.list_danmaku_providers()
         sys.stderr.write("Danmaku providers:\n")
         for name in providers:
             sys.stderr.write(f"  - {name}\n")
+
+        handlers = registry.list_anticrawler_handlers()
+        sys.stderr.write("Anti-crawler handlers:\n")
+        for name in handlers:
+            sys.stderr.write(f"  - {name}\n")
+
         return 0
 
     url = _extract_url_for_error(args_list)
