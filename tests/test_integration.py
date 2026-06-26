@@ -33,10 +33,43 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
         command,
         check=False,
         capture_output=True,
-        text=True,
         encoding="utf-8",
+        errors="replace",
         env=env,
     )
+
+
+def _check_asr_available() -> bool:
+    """Check if ASR (SenseVoice/FunASR) is available."""
+    import importlib.util
+    return importlib.util.find_spec("funasr") is not None
+
+
+# Skip ASR tests if FunASR is not available
+_ASR_SKIPIF = pytest.mark.skipif(
+    not os.environ.get("SENSEVOICE_SOURCE_DIR") and not _check_asr_available(),
+    reason="ASR (FunASR/SenseVoice) not available in this environment",
+)
+
+
+@_ASR_SKIPIF
+@pytest.mark.slow
+@pytest.mark.integration
+def test_youtube_asr_fallback() -> None:
+    """AT-002: ASR fallback for a YouTube video without subtitles."""
+    result = _run_cli(
+        "-u", YOUTUBE_ASR_URL,
+        "--lang", "en",
+        "--proxy", PROXY,
+        "--transcript-only",
+        "--output-format", "json",
+    )
+
+    assert result.returncode == 0, f"CLI failed: {result.stderr}"
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "success"
+    assert payload["meta"]["strategy_used"] in {"subtitle", "asr"}
+    assert payload["content"]["transcript_excerpt"]
 
 
 @pytest.mark.slow
@@ -48,6 +81,7 @@ def test_youtube_subtitle_extraction() -> None:
         "--lang", "en",
         "--proxy", PROXY,
         "--transcript-only",
+        "--output-format", "json",
     )
 
     assert result.returncode == 0, f"CLI failed: {result.stderr}"
@@ -60,25 +94,6 @@ def test_youtube_subtitle_extraction() -> None:
 
 @pytest.mark.slow
 @pytest.mark.integration
-def test_youtube_asr_fallback() -> None:
-    """AT-002: ASR fallback for a YouTube video without subtitles."""
-    result = _run_cli(
-        "-u", YOUTUBE_ASR_URL,
-        "--lang", "en",
-        "--proxy", PROXY,
-        "--transcript-only",
-    )
-
-    assert result.returncode == 0, f"CLI failed: {result.stderr}"
-    payload = json.loads(result.stdout)
-    assert payload["status"] == "success"
-    # Strategy may be subtitle or asr depending on video; both are valid
-    assert payload["meta"]["strategy_used"] in {"subtitle", "asr"}
-    assert payload["content"]["transcript_excerpt"]
-
-
-@pytest.mark.slow
-@pytest.mark.integration
 def test_stdout_json_contract() -> None:
     """AT-003: stdout contains only valid JSON, no extra text."""
     result = _run_cli(
@@ -86,6 +101,7 @@ def test_stdout_json_contract() -> None:
         "--lang", "en",
         "--proxy", PROXY,
         "--transcript-only",
+        "--output-format", "json",
     )
 
     assert result.returncode == 0
@@ -105,6 +121,7 @@ def test_stderr_isolation() -> None:
         "--lang", "en",
         "--proxy", PROXY,
         "--transcript-only",
+        "--output-format", "json",
     )
 
     assert result.returncode == 0
@@ -149,6 +166,7 @@ def test_output_file_writes_json() -> None:
             "--proxy", PROXY,
             "--transcript-only",
             "--output-file", output_path,
+            "--output-format", "json",
         )
 
         assert result.returncode == 0, f"CLI failed: {result.stderr}"
