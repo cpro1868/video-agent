@@ -38,6 +38,7 @@ class NetworkConfig:
 
 @dataclass(frozen=True)
 class AsrConfig:
+    engine: str = "sensevoice"
     device: str = "auto"
     model: str = "iic/SenseVoiceSmall"
     source_dir: str = ""
@@ -87,6 +88,7 @@ class CliOverrides:
     llm_user_prompt_file: str | None = None
     llm_danmaku_prompt: str | None = None
     llm_danmaku_prompt_file: str | None = None
+    asr_engine: str | None = None
     asr_device: str | None = None
     sensevoice_source_dir: str | None = None
 
@@ -150,6 +152,7 @@ def parse_config(raw: dict[str, object]) -> AppConfig:
         ),
         ai=AiConfig(
             asr=AsrConfig(
+                engine=str(asr_raw.get("engine") or "sensevoice"),
                 device=str(asr_raw.get("device") or "auto"),
                 model=str(asr_raw.get("model") or "iic/SenseVoiceSmall"),
                 source_dir=str(asr_raw.get("source_dir") or ""),
@@ -231,6 +234,11 @@ def resolve_asr_device_config(config: AppConfig, overrides: CliOverrides | None 
 def resolve_asr_config(config: AppConfig, overrides: CliOverrides | None = None) -> AsrConfig:
     overrides = overrides or CliOverrides()
     return AsrConfig(
+        engine=(
+            overrides.asr_engine
+            or config.ai.asr.engine
+            or "sensevoice"
+        ),
         device=(
             overrides.asr_device
             or config.ai.asr.device

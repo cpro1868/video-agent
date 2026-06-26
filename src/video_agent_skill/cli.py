@@ -110,6 +110,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             llm_system_prompt_file=args.llm_system_prompt_file,
             llm_user_prompt_template=args.llm_user_prompt_template,
             llm_user_prompt_file=args.llm_user_prompt_file,
+            asr_engine=args.asr_engine,
             asr_device=args.asr_device,
             sensevoice_source_dir=args.sensevoice_source_dir,
         )
@@ -332,6 +333,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--llm-user-prompt-file", default=None,
         help="Read the LLM user prompt template from a UTF-8 text file.",
+    )
+    parser.add_argument(
+        "--asr-engine", default=None,
+        help="ASR engine to use: sensevoice (default), funasr, or whiser.",
     )
     parser.add_argument(
         "--asr-device", default=None,
