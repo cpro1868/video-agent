@@ -46,6 +46,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         from video_agent_skill import __version__
         sys.stderr.write(f"video-agent {__version__}\n")
         return 0
+    if args_list and args_list[0] == "--list-plugins":
+        from video_agent_skill.core.plugin_registry import PluginRegistry
+        registry = PluginRegistry.instance()
+        providers = registry.list_danmaku_providers()
+        sys.stderr.write("Danmaku providers:\n")
+        for name in providers:
+            sys.stderr.write(f"  - {name}\n")
+        return 0
 
     url = _extract_url_for_error(args_list)
     language = _extract_language_for_error(args_list)
@@ -395,6 +403,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--overwrite",
         action="store_true",
         help="Allow --init-config or --setup to overwrite existing files.",
+    )
+    parser.add_argument(
+        "--list-plugins",
+        action="store_true",
+        help="List all installed plugins and exit.",
     )
     return parser
 
