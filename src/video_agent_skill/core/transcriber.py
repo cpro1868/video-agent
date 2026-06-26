@@ -5,9 +5,44 @@ import wave
 from dataclasses import dataclass
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from video_agent_skill.errors import AsrRuntimeError, CudaOomError
+
+
+@runtime_checkable
+class AsrEngine(Protocol):
+    """ASR engine interface.
+    
+    Third-party plugins implement this interface to use
+    different ASR engines (Whisper, Paraformer, Azure, etc).
+    """
+    
+    @property
+    def name(self) -> str:
+        """Engine unique identifier."""
+        ...
+    
+    def transcribe(
+        self,
+        audio_path: str,
+        *,
+        device: str = "auto",
+    ) -> str:
+        """Transcribe audio file to text.
+        
+        Args:
+            audio_path: Absolute path to audio file (wav format)
+            device: Device selection ("auto", "cuda", "mps", "cpu")
+            
+        Returns:
+            Transcribed plain text
+            
+        Raises:
+            AsrRuntimeError: Transcription failed
+            CudaOomError: GPU memory insufficient
+        """
+        ...
 from video_agent_skill.utils.logging import debug, info, warning
 
 VALID_ASR_DEVICES = {"auto", "cuda", "mps", "cpu"}
