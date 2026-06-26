@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0rc0] - 2026-06-26
+
+### Added
+- AsrEngine Protocol for ASR engine plugins
+- SenseVoiceEngine implementing AsrEngine Protocol
+- PluginRegistry ASR engine support
+- --asr-engine CLI option
+- --list-plugins shows ASR engines
+
 ## [2.0.0b0] - 2026-06-26
 
 ### Added
