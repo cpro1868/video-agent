@@ -27,6 +27,7 @@ from video_agent_skill.utils.config import (
     resolve_proxy,
 )
 from video_agent_skill.utils.logging import error as log_error
+from video_agent_skill.utils.logging import info
 from video_agent_skill.utils.logging import success as log_success
 from video_agent_skill.utils.logging import warning
 
@@ -698,7 +699,8 @@ def _run_batch(
     results: list[dict[str, object]] = []
     exit_code = 0
 
-    for url in urls:
+    for i, url in enumerate(urls, 1):
+        info(f"Processing {i}/{len(urls)}: {url}")
         try:
             code = _run_single(
                 url=url,
