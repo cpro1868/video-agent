@@ -87,6 +87,65 @@ When changing behavior, update the relevant docs in the same session:
 
 Never commit secrets, API keys, private cookies, paid-content URLs, full sensitive local paths, or downloaded restricted media. Do not implement bypasses for paid, private, or unauthorized content; return a clear authorization error instead.
 
+### Git Hooks Configuration
+
+This repository includes a pre-commit hook template in `.githooks/` to detect secrets before committing.
+
+**Enable the hooks**:
+
+```bash
+# Enable git to use hooks from .githooks/ directory
+git config core.hooksPath .githooks
+```
+
+**Make the hook executable**:
+
+```bash
+chmod +x .githooks/pre-commit
+```
+
+The hook will scan staged files for common API key patterns (e.g., `sk-...`, `api_key: "..."`) before each commit and abort if secrets are detected.
+
+### Git History Security
+
+**Never commit files containing secrets to git**. Once committed, secrets persist in history even after deletion. Mitigation requires `git filter-branch` or `git filter-repo` to rewrite history, which is disruptive.
+
+**Sensitive file patterns to never commit**:
+
+| Pattern | Reason |
+|---------|--------|
+| `config.yaml` with `api_key: "sk-..."` | Real API keys |
+| `*.local.yaml`, `*.secret.yaml`, `.env*` | Configuration with credentials |
+| `.claude/settings.local.json` | Agent permission configs may contain keys |
+| `~/.video-agent-skill/config.yaml` | User runtime config |
+| `site-packages/**/config.yaml` | Installed package configs |
+
+**Pre-commit checks (recommended)**:
+
+```bash
+# Install gitleaks or git-secrets
+brew install gitleaks  # macOS
+# or
+pip install detect-secrets
+
+# Run before first commit in a new clone
+gitleaks detect --source . --verbose
+```
+
+**If a secret is accidentally committed**:
+
+1. Immediately rotate the compromised key
+2. Use `git filter-repo` to remove the file from history:
+   ```bash
+   pip install git-filter-repo
+   git filter-repo --path config.yaml --invert-paths --force
+   git push --force
+   ```
+3. Notify all collaborators to re-clone
+4. Enable GitHub Secret Scanning in repository settings
+
+**GitHub Secret Scanning**: Enable in repository Settings → Security → Secret scanning. GitHub will alert when secrets are pushed to any branch.
+
 ### Release And Packaging Rules
 
 Before building any wheel (`uv build --wheel`) or distribution artifact, the following checks are mandatory:

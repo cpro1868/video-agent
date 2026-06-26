@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-commit hook to detect secrets before committing
+# Place this file as .git/hooks/pre-commit and make it executable
+
+echo "Running secret detection..."
+
+# Patterns to check (common API key patterns)
+PATTERNS="sk-[a-zA-Z0-9_-]{20,}|api[_-]?key['\"]:\\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+
+for file in $(git diff --cached --name-only); do
+    if [ -f "$file" ]; then
+        if grep -E "$PATTERNS" "$file" 2>/dev/null; then
+            echo "ERROR: Possible secret detected in $file"
+            echo "Commit aborted. Remove secrets before committing."
+            exit 1
+        fi
+    fi
+done
+
+echo "No secrets detected."
+exit 0

@@ -22,3 +22,7 @@ config.local.yaml
 docs/工作进展记录.md
 docs/里程碑和开发计划.md
 docs/测试记录文档.md
+
+# Git hooks (use .githooks/ for versioned hooks, see AGENTS.md)
+# Uncomment the following line if using local hooks:
+# .git/hooks/
